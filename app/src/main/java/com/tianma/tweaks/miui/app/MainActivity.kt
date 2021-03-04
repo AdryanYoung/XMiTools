@@ -1,6 +1,8 @@
 package com.tianma.tweaks.miui.app
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.Menu
 import android.view.MenuItem
 import com.afollestad.materialdialogs.MaterialDialog
@@ -8,11 +10,10 @@ import com.tianma.tweaks.miui.R
 import com.tianma.tweaks.miui.app.base.BaseActivity
 import com.tianma.tweaks.miui.app.base.BasePreferenceFragment
 import com.tianma.tweaks.miui.app.fragment.*
-import com.tianma.tweaks.miui.utils.ModuleUtils
-import com.tianma.tweaks.miui.utils.PackageUtils
-import com.tianma.tweaks.miui.utils.RootUtils
+import com.tianma.tweaks.miui.utils.*
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.toolbar.*
+import kotlin.math.max
 
 class MainActivity : BaseActivity() {
 
@@ -51,60 +52,80 @@ class MainActivity : BaseActivity() {
             R.id.action_soft_reboot_system -> preformSoftRebootSystem()
             R.id.action_restart_host_apps -> performRestartHostApps()
             R.id.action_taichi_users_notice -> showTaiChiUsersNotice()
+            R.id.action_edxposed_users_notice -> showEdXposedUsersNotice()
             else -> return super.onOptionsItemSelected(item)
         }
         return true
     }
 
     private fun performRebootSystem() {
-        MaterialDialog.Builder(this)
-                .title(R.string.action_reboot_system)
-                .content(R.string.prompt_reboot_system_message)
-                .positiveText(R.string.confirm)
-                .onPositive { _, _ -> RootUtils.reboot() }
-                .negativeText(R.string.cancel)
-                .show()
+        MaterialDialog(this).show {
+            title(R.string.action_reboot_system)
+            message(R.string.prompt_reboot_system_message)
+            positiveButton(R.string.confirm) {
+                RootUtils.reboot()
+            }
+            negativeButton(R.string.cancel)
+        }
     }
 
     private fun preformSoftRebootSystem() {
-        MaterialDialog.Builder(this)
-                .title(R.string.action_soft_reboot_system)
-                .content(R.string.prompt_soft_reboot_message)
-                .positiveText(R.string.confirm)
-                .onPositive { _, _ -> RootUtils.softReboot() }
-                .negativeText(R.string.cancel)
-                .show()
+        MaterialDialog(this).show {
+            title(R.string.action_soft_reboot_system)
+            message(R.string.prompt_soft_reboot_message)
+            positiveButton(R.string.confirm) {
+                RootUtils.softReboot()
+            }
+            negativeButton(R.string.cancel)
+        }
     }
 
     private fun performRestartHostApps() {
-        MaterialDialog.Builder(this)
-                .title(R.string.action_restart_host_apps)
-                .content(R.string.prompt_restart_host_apps_message)
-                .positiveText(R.string.confirm)
-                .onPositive { _, _ -> RootUtils.restartSystemUI() }
-                .negativeText(R.string.cancel)
-                .show()
+        MaterialDialog(this).show {
+            title(R.string.action_restart_host_apps)
+            message(R.string.prompt_restart_host_apps_message)
+            positiveButton(R.string.confirm) {
+                RootUtils.restartSystemUI()
+            }
+            negativeButton(R.string.cancel)
+        }
     }
 
     private fun showTaiChiUsersNotice() {
-        MaterialDialog.Builder(this)
-                .title(R.string.action_taichi_users_notice)
-                .content(R.string.prompt_taichi_users_notice_message)
-                .positiveText(R.string.check_module)
-                .onPositive { _, _ -> PackageUtils.startCheckModuleInTaiChi(this) }
-                .negativeText(R.string.add_applications)
-                .onNegative { _, _ -> PackageUtils.startAddAppsInTaiChi(this) }
-                .show()
+        MaterialDialog(this).show {
+            title(R.string.action_taichi_users_notice)
+            message(R.string.prompt_taichi_users_notice_message)
+            positiveButton(R.string.check_module) {
+                PackageUtils.startCheckModuleInTaiChi(this@MainActivity)
+            }
+            negativeButton(R.string.add_applications) {
+                PackageUtils.startAddAppsInTaiChi(this@MainActivity)
+            }
+        }
+    }
+
+    private fun showEdXposedUsersNotice() {
+        MaterialDialog(this).show {
+            title(R.string.action_edxposed_users_notice)
+            message(R.string.edxposed_users_notice_content)
+            positiveButton(R.string.confirm)
+        }
     }
 
     private fun showModuleStatus() {
-        val format = "%s (%s)"
-        val appName = getString(R.string.app_name)
-        val appTitle = if (ModuleUtils.isModuleActive()) {
-            String.format(format, appName, getString(R.string.module_status_active))
-        } else {
-            String.format(format, appName, getString(R.string.module_status_inactive))
-        }
-        title = appTitle
+        val handler = Handler(Looper.getMainLooper())
+        handler.postDelayed({
+            if (isFinishing) {
+                return@postDelayed
+            }
+            val format = "%s (%s)"
+            val appName = getString(R.string.app_name)
+            val appTitle = if (ModuleUtils.isModuleActive()) {
+                String.format(format, appName, getString(R.string.module_status_active))
+            } else {
+                String.format(format, appName, getString(R.string.module_status_inactive))
+            }
+            title = appTitle
+        }, 1000L)
     }
 }
